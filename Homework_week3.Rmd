@@ -1,0 +1,19 @@
+---
+title: "Social Networks - Week 3"
+author: "Alexander Noll"
+date: "10. Oktober 2015"
+output: html_document
+---
+
+```{r, include = FALSE}
+library(statnet)
+```
+
+In this document, we solve the problems for the course Social and Economic Networks.
+
+# Sessioninfos
+
+```{r}
+sessionInfo()
+Sys.Date()
+```
