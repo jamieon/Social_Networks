@@ -5,11 +5,65 @@ date: "10. Oktober 2015"
 output: html_document
 ---
 
-```{r, include = FALSE}
+```{r, message = FALSE}
+set.seed(1)
 library(statnet)
+library(igraph)
+library(boot)
+library(dplyr)
+data(florentine)
 ```
 
-In this document, we solve the problems for the course Social and Economic Networks.
+In this document, we solve the homework problems for week 3 of the Coursera course "Social and Economic Networks". The data is in the statnet package. We plot the network here.
+
+```{r}
+plot(flomarriage)
+```
+
+# Erdody-Renyi graph
+
+Firstly, we fit an Erdoy-Renyi random graph. This is the special case of an exponential random graph model that fits only the number links (i.e. the counting statistics entering the exponential random graph model is only the number of edges in the graph).
+
+```{r}
+florentine_edges <- ergm(flomarriage ~ edges)
+```
+
+We inspect the coefficients:
+
+```{r}
+florentine_edges 
+```
+
+Recall that for these kinds of ERGS, we have a logistic regression model, i.e. $log(\frac{p}{1 - p} = \beta$), where $\beta$ is the coefficient of the above model. Thus, we have 
+
+```{r}
+p <- inv.logit(florentine_edges$coef)
+p
+```
+
+# Links and triangles
+
+Next, we fit an ERGM that contains as additional parameter the number of triangles in the graph:
+
+```{r, include = FALSE}
+GraphCoef <- function(input_graph){
+    # Fits an ERGM model with edges and triangles and returns the coefficient
+    # for the number of triangles
+    #
+    # Args: input_graph: graph that is readable by igraph
+    #
+    # Returns: float number that is the coefficient for the number of triangles
+    
+    ergm_model <- ergm(input_graph ~ edges + triangles, verbose = FALSE)
+    return(ergm_model$coef)['triangle']
+}
+
+coef_estimate <- sapply(1:10, function(i) {GraphCoef(flomarriage)}) %>% median
+```
+
+```{r}
+coef_estimate
+```
 
 # Sessioninfos
 
