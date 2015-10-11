@@ -11,6 +11,8 @@ library(statnet)
 library(igraph)
 library(boot)
 library(dplyr)
+library(magrittr)
+setwd("~/Desktop/Networks/Social_Networks")
 data(florentine)
 ```
 
@@ -55,7 +57,7 @@ GraphCoef <- function(input_graph){
     # Returns: float number that is the coefficient for the number of triangles
     
     ergm_model <- ergm(input_graph ~ edges + triangles, verbose = FALSE)
-    return(ergm_model$coef)['triangle']
+    return(ergm_model$coef[2])
 }
 
 coef_estimate <- sapply(1:10, function(i) {GraphCoef(flomarriage)}) %>% median
@@ -63,6 +65,61 @@ coef_estimate <- sapply(1:10, function(i) {GraphCoef(flomarriage)}) %>% median
 
 ```{r}
 coef_estimate
+```
+
+# Small Worlds Model
+
+In this second part, we will have a look at the small worlds model discussed in Week 2 of the course. We firstly load the data
+
+```{r}
+small_worlds <- read.graph(file = "Ring25.NET", format = "pajek")
+plot(small_worlds)
+```
+
+From the plot, we actually see the parameter; it is clearly $6$, since we can hop two steps to the left or to the right from any vertex. We can, however, also calculate it:
+
+```{r}
+diameter(small_worlds)
+```
+
+For the clustering coefficient, we get:
+
+```{r}
+transitivity(small_worlds)
+```
+
+This can also be calculated manually easily. By symmetry, it suffices to calculate the clustering coefficient for a single node. Let us pick the node 1. THis has connection to 2, 3, 24, 25. Thus, there are 6 possible triangles, and three of them are formed.
+
+Now, we add a couple of links to the ring:
+
+```{r}
+edges_to_delete <- 
+    data.frame(
+        from = c(3, 5, 7, 10, 13, 19, 24),
+        to = c(1, 3, 6, 9, 12, 17, 22)
+    )
+
+small_worlds %<>% 
+    add.edges(c(1, 13)) %>%
+    add.edges(c(3, 15)) %>%
+    add.edges(c(5, 17)) %>%
+    add.edges(c(7, 19)) %>%
+    add.edges(c(9, 21)) %>%
+    add.edges(c(11, 23)) %>%
+    add.edges(c(13, 25)) 
+
+for(row in 1:nrow(edges_to_delete)){
+    small_worlds[edges_to_delete[row , 1], edges_to_delete[row , 2]] <- FALSE
+}
+
+plot(small_worlds)
+```
+
+Now, we calculate the diameter and average clustering coefficient:
+
+```{r}
+diameter(small_worlds, directed = FALSE, weights = NA)
+transitivity(small_worlds, type = "local") %>% mean
 ```
 
 # Sessioninfos
